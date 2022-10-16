@@ -1,0 +1,23 @@
+version: "2"
+
+services:
+  backend:   #作成するコンテナの名前
+    container_name: backend
+    #build: .   #同じフォルダ内のDockerfileをビルドする（コンテナにする）
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #restart: always  # ホストOSやDockerデーモン起動時に自動で起動されるようになる
+    ports:
+      - 8000:8000  #元の指定のポートが違う場合、こっちが優先される（今回の場合8080ではなく8000ポートでサーバーが起動）
+      - 9229:9229  # debugger port
+    volumes:  # volumeはコンテナ破棄後もそのデータは残り続け、再利用できる（使用するリソースをここで指定している）
+      #- .:/backend     # カレンとディレクトリのものを/usr/src/appにアプデーと（タイプはbindでは、ホスト上のフォルダーをdockerないでvolumeとしてマウントさせる）
+      #- /backend/node_modules   #ローカルのものではなく、docker内のモジュールのみを使いたいため指定（タイプはvolumeは、すでにコンテナ内にあるvolumeを指定するためのもの（今回の場合image作成時にすでにbackendフォルダ内にnode_modulesが生成されているため指定可能)）
+      - type: bind   #タイプbindでは、ホスト上のフォルダーをdockerないでvolumeとしてマウントさせる
+        source: .   #マウント元
+        target: /backend  #マウントされるコンテナないのパス
+      - /backend/node_modules  # タイプはvolumeは、すでにコンテナ内にあるvolumeを指定するためのもの（今回の場合image作成時にすでにbackendフォルダ内にnode_modulesが生成されているため指定可能）)
+    command: yarn start:docker
+    environment:
+      PORT: 8000
